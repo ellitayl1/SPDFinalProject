@@ -3,26 +3,29 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-<h2>Welcome to Smart Neighborhood Exchange</h2>
+<h2 class="mb-4">Welcome to Smart Neighborhood Exchange</h2>
 
 <h3>Latest Listings</h3>
-<ul>
+<div class="row">
     {% for resource in latest_resources %}
-    <li>
-        <h4>{{ resource[2] }}</h4> <!-- Title -->
-        <p>{{ resource[3] }}</p> <!-- Description -->
-        {% if resource[4] %}
-        <img src="{{ url_for('static', filename=resource[4]) }}" alt="Resource Image" style="max-width: 300px;">
-        {% endif %}
-
-        <p><strong>Category:</strong> {{ resource[5] }}</p>
-        <p><strong>Date Posted:</strong> {{ resource[7] }}</p>
-        <a href="{{ url_for('resource_details', resource_id=resource[0]) }}">View Details</a>
-    </li>
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                {% if resource[4] %}
+                    <img src="{{ url_for('static', filename=resource[4]) }}" class="card-img-top" alt="Resource Image">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ resource[2] }}</h5> <!-- Title -->
+                    <p class="card-text">{{ resource[3] }}</p> <!-- Description -->
+                    <p><strong>Category:</strong> {{ resource[5] }}</p>
+                    <p><strong>Date Posted:</strong> {{ resource[7] }}</p>
+                    <a href="{{ url_for('resource_details', resource_id=resource[0]) }}" class="btn btn-primary">View Details</a>
+                </div>
+            </div>
+        </div>
     {% endfor %}
-</ul>
+</div>
 
 {% if not latest_resources %}
-<p>No listings available at the moment.</p>
+    <p>No listings available at the moment.</p>
 {% endif %}
 {% endblock %}

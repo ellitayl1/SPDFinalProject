@@ -84,8 +84,6 @@ def resource_details(resource_id):
     reviews = get_reviews(resource[1])  # Fetch reviews for the resource owner (user_id)
     return render_template('resource_details.html', resource=resource, reviews=reviews)
 
-import os
-from werkzeug.utils import secure_filename
 
 @app.route('/add_resource', methods=['GET', 'POST'])
 def add_resource():
@@ -101,16 +99,15 @@ def add_resource():
         file = request.files['images']
 
         # Ensure the upload directory exists
-        upload_folder = app.config['UPLOAD_FOLDER']
-        if not os.path.exists(upload_folder):
-            os.makedirs(upload_folder)
+        if not os.path.exists(app.config['UPLOAD_FOLDER']):
+            os.makedirs(app.config['UPLOAD_FOLDER'])
 
         # Handle image upload
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            filepath = os.path.join(upload_folder, filename)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
-            image_path = os.path.join('uploads', filename)  # Save relative path
+            image_path = f'uploads/{filename}'  # Save relative path
         else:
             flash("Please upload a valid JPG image.")
             return redirect(url_for('add_resource'))
@@ -119,7 +116,7 @@ def add_resource():
         try:
             save_resource(user_id, title, description, image_path, category, availability)
             flash("Resource added successfully!")
-            return redirect(url_for('dashboard'))
+            return redirect(url_for('home'))
         except ValueError as e:
             flash(str(e))
             return redirect(url_for('add_resource'))
