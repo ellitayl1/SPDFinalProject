@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<h2>Welcome to Smart Neighborhood Exchange</h2>
+
+<h3>Latest Listings</h3>
+<ul>
+    {% for resource in latest_resources %}
+    <li>
+        <h4>{{ resource[2] }}</h4> <!-- Title -->
+        <p>{{ resource[3] }}</p> <!-- Description -->
+        {% if resource[4] %}
+        <img src="{{ url_for('static', filename=resource[4]) }}" alt="Resource Image" style="max-width: 300px;">
+        {% endif %}
+
+        <p><strong>Category:</strong> {{ resource[5] }}</p>
+        <p><strong>Date Posted:</strong> {{ resource[7] }}</p>
+        <a href="{{ url_for('resource_details', resource_id=resource[0]) }}">View Details</a>
+    </li>
+    {% endfor %}
+</ul>
+
+{% if not latest_resources %}
+<p>No listings available at the moment.</p>
+{% endif %}
+{% endblock %}

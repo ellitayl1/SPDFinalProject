@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h2>Your Dashboard</h2>
+
+<!-- Link to Messages Page -->
+<a href="{{ url_for('messages') }}" class="button">Go to Messages</a> <!-- Added button/link -->
+
+<section>
+    <h3>Your Listings</h3>
+    <ul>
+        {% for resource in user_resources %}
+            <li>
+                <h4>{{ resource[2] }}</h4>
+                <p>{{ resource[3] }}</p>
+                <a href="{{ url_for('resource_details', resource_id=resource[0]) }}">View Details</a>
+            </li>
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('add_resource') }}">Add New Listing</a>
+</section>
+
+<section>
+    <h3>Messages</h3>
+    <ul>
+        {% for message in user_messages %}
+            <li>
+                <strong>From:</strong> User {{ message[1] }}
+                <p>{{ message[3] }}</p>
+                <small>{{ message[4] }}</small>
+            </li>
+        {% endfor %}
+    </ul>
+</section>
+
+<section>
+    <h3>Reviews</h3>
+    <ul>
+        {% for review in user_reviews %}
+            <li>
+                <strong>Rating:</strong> {{ review[2] }}
+                <p>{{ review[4] }}</p>
+                <small>Reviewed by {{ review[1] }} on {{ review[5] }}</small>
+            </li>
+        {% endfor %}
+    </ul>
+</section>
+{% endblock %}
