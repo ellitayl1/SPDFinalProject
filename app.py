@@ -7,7 +7,7 @@ from db import (
     add_message, get_messages, add_review, get_reviews, get_latest_resources
 )
 from werkzeug.security import check_password_hash
-
+#test
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
