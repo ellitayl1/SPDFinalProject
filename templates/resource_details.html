@@ -18,49 +18,74 @@
                 <div class="text-muted">
                     <strong>Date Posted:</strong> <span class="text-dark">{{ resource[7] }}</span>
                 </div>
+                <br>
+                <div>
+                    <!-- Reservation Form -->
+                    <!-- Reservation Form -->
+                    {% if resource[6] == 'Available' %}
+                    <!-- Show the reservation form -->
+                    <form action="{{ url_for('reserve_item', resource_id=resource[0]) }}" method="POST">
+
+                        <input type="hidden" name="resource_id" value="{{ resource[0] }}">
+                        <label for="startDate">Start Date:</label>
+                        <input type="text" id="startDate" name="start_date" placeholder="Select start date">
+
+                        <label for="endDate">End Date:</label>
+                        <input type="text" id="endDate" name="end_date" placeholder="Select end date">
+
+                        <button type="submit" class="btn btn-primary">Reserve</button>
+                    </form>
+                    {% else %}
+                    <p class="text-muted">This item is currently reserved and cannot be reserved.</p>
+                    {% endif %}
+
+
+
+                    <!-- Include Flatpickr library -->
+                    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+                    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+                    <script>
+                        flatpickr("#startDate", {
+                            dateFormat: "Y-m-d"
+                        });
+
+                        flatpickr("#endDate", {
+                            dateFormat: "Y-m-d"
+                        });
+                    </script>
+
+
+
+                </div>
             </div>
             <div class="col-md-4 text-center">
                 {% if resource[4] %}
-                    <img src="{{ url_for('static', filename=resource[4]) }}" class="img-fluid rounded shadow-sm mt-3" alt="Resource Image">
+                <img src="{{ url_for('static', filename=resource[4]) }}" class="img-fluid rounded shadow-sm mt-3"
+                    alt="Resource Image">
                 {% endif %}
             </div>
         </div>
     </div>
 </div>
-<!-- Resource Details Page -->
-<div class="calendar-container">
-    <h4>Reserve This Item</h4>
-    <input type="text" id="startDate" placeholder="Select start date">
-    <input type="text" id="endDate" placeholder="Select end date">
-    <button id="reserveButton" class="btn btn-primary">Reserve</button>
-</div>
-
-<!-- Include flatpickr library -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-
-<script>
-    // Initialize flatpickr date pickers
-    flatpickr("#startDate", { dateFormat: "Y-m-d" });
-    flatpickr("#endDate", { dateFormat: "Y-m-d" });
-</script>
 
 <div class="card p-4 shadow-sm">
     <h3 class="mb-4">Reviews</h3>
     {% if reviews %}
-        <ul class="list-group mb-4">
-            {% for review in reviews %}
-                <li class="list-group-item">
-                    <div>
-                        <strong>Rating:</strong> {{ review[1] }} / 5 <!-- Display the numeric rating -->
-                        <p class="mb-1">{{ review[2] }}</p> <!-- Display Comment/Description -->
-                        <small class="text-muted">Reviewed by {{ review[4] }} on {{ review[3] }}</small> <!-- Display Reviewer Name and Date -->
-                    </div>
-                </li>
-            {% endfor %}
-        </ul>
+    <ul class="list-group mb-4">
+        {% for review in reviews %}
+        <li class="list-group-item">
+            <div>
+                <strong>Rating:</strong> {{ review[1] }} / 5 <!-- Display the numeric rating -->
+                <p class="mb-1">{{ review[2] }}</p> <!-- Display Comment/Description -->
+                <small class="text-muted">Reviewed by {{ review[4] }} on {{ review[3] }}</small>
+                <!-- Display Reviewer Name and Date -->
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
     {% else %}
-        <p class="text-muted">No reviews yet for this resource.</p>
+    <p class="text-muted">No reviews yet for this resource.</p>
     {% endif %}
 
     <h4 class="mb-3">Leave a Review</h4>
@@ -76,6 +101,4 @@
         <button type="submit" class="btn btn-primary">Submit Review</button>
     </form>
 </div>
-
-
 {% endblock %}

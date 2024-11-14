@@ -16,26 +16,39 @@
     <!-- Latest Listings Section -->
     <div class="mt-5">
         <h2 class="mb-4">Latest Listings</h2>
+
+        <!-- Search Form -->
+        <form action="{{ url_for('home') }}" method="GET" class="mb-4">
+            <div class="input-group">
+                <input type="text" class="form-control" name="search" placeholder="Search resources by name"
+                       value="{{ request.args.get('search', '') }}">
+                <button class="btn btn-primary" type="submit">Search</button>
+            </div>
+        </form>
+
+        <!-- Display Resources -->
         <div class="row">
             {% for resource in latest_resources %}
-                <div class="col-md-4 mb-4">
-                    <div class="card shadow-sm">
-                        {% if resource[4] %}
-                            <img src="{{ url_for('static', filename=resource[4]) }}" class="card-img-top img-fluid" alt="{{ resource[2] }}">
-                        {% endif %}
-                        <div class="card-body">
-                            <h5 class="card-title text-capitalize">{{ resource[2] }}</h5> <!-- Title -->
-                            <p class="card-text">{{ resource[3] }}</p> <!-- Description -->
-                            <div class="text-muted mb-2">
-                                <strong>Category:</strong> {{ resource[5] }}
-                            </div>
-                            <div class="text-muted mb-2">
-                                <strong>Date Posted:</strong> {{ resource[7] }}
-                            </div>
-                            <a href="{{ url_for('resource_details', resource_id=resource[0]) }}" class="btn btn-primary">View Details</a>
+            <div class="col-md-4 mb-4">
+                <div class="card shadow-sm">
+                    {% if resource[4] %}
+                    <img src="{{ url_for('static', filename=resource[4]) }}" class="card-img-top img-fluid"
+                         alt="{{ resource[2] }}">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title text-capitalize">{{ resource[2] }}</h5> <!-- Title -->
+                        <p class="card-text">{{ resource[3] }}</p> <!-- Description -->
+                        <div class="text-muted mb-2">
+                            <strong>Category:</strong> {{ resource[5] }}
                         </div>
+                        <div class="text-muted mb-2">
+                            <strong>Date Posted:</strong> {{ resource[7] }}
+                        </div>
+                        <a href="{{ url_for('resource_details', resource_id=resource[0]) }}"
+                           class="btn btn-primary">View Details</a>
                     </div>
                 </div>
+            </div>
             {% endfor %}
         </div>
     </div>

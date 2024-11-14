@@ -28,9 +28,21 @@ init_db()
 
 @app.route('/')
 def home():
-    latest_resources = get_latest_resources()
-    return render_template('home.html', latest_resources=latest_resources)
+    search_query = request.args.get('search')
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
 
+    if search_query:
+        # Use a SQL query to search for resources by name
+        cursor.execute("SELECT * FROM resources WHERE title LIKE ?", ('%' + search_query + '%',))
+    else:
+        # Fetch all resources if there's no search query
+        cursor.execute("SELECT * FROM resources")
+
+    latest_resources = cursor.fetchall()
+    conn.close()
+
+    return render_template('home.html', latest_resources=latest_resources)
 
 init_db()
 
@@ -219,19 +231,117 @@ def upload_profile_image():
 
     flash('Invalid file type')
     return redirect(url_for('dashboard'))
+# Example route for resource details
 @app.route('/resource_details/<int:resource_id>')
 def resource_details(resource_id):
-    # Fetch resource details using the new function
-    resource = get_resource_by_id(resource_id)
-    
-    if not resource:
-        return "Resource not found", 404  # Handle the case where the resource is not found
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
 
-    # Fetch reviews for the resource's owner
-    user_id = resource[1]  # Assuming user_id is the second element (index 1)
-    reviews = get_reviews(user_id)
+    # Fetch resource details
+    cursor.execute("SELECT * FROM resources WHERE resource_id = ?", (resource_id,))
+    resource = cursor.fetchone()
 
-    return render_template('resource_details.html', resource=resource, reviews=reviews)
+    # Fetch reservations for this resource
+    cursor.execute('''SELECT start_date, end_date FROM reservations WHERE resource_id = ?''', (resource_id,))
+    reservations = cursor.fetchall()
+
+    # Convert reservations into a list of dictionaries for JSON serialization
+    unavailable_dates = [
+        {"start_date": r[0], "end_date": r[1]} for r in reservations if r[0] and r[1]
+    ]
+
+    conn.close()
+
+    return render_template(
+        'resource_details.html',
+        resource=resource,
+        unavailable_dates=unavailable_dates
+    )
+
+@app.route('/reserve_resource', methods=['POST'])
+def reserve_resource():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    resource_id = request.form.get('resource_id')
+    start_date = request.form.get('start_date')
+    end_date = request.form.get('end_date')
+    user_id = session['user_id']
+
+    # Save the reservation to the database
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    if not resource_id or not resource_id.isdigit():
+        flash("Invalid resource ID.")
+        return redirect(url_for('home'))
+
+    resource_id = int(resource_id)
+    try:
+        cursor.execute('''
+            INSERT INTO reservations (resource_id, user_id, start_date, end_date)
+            VALUES (?, ?, ?, ?)
+        ''', (resource_id, user_id, start_date, end_date))
+        conn.commit()
+        flash("Reservation successful!")
+    except Exception as e:
+        flash(f"Error: {str(e)}")
+    finally:
+        conn.close()
+
+    return redirect(url_for('resource_details', resource_id=resource_id))
+# Flask Route to Handle Reservations
+@app.route('/reserve_item/<int:resource_id>', methods=['POST'])
+def reserve_item(resource_id):
+    if 'user_id' not in session:
+        flash("You need to be logged in to make a reservation.")
+        return redirect(url_for('login'))
+
+    user_id = session['user_id']
+    start_date = request.form.get('start_date')
+    end_date = request.form.get('end_date')
+
+    if not start_date or not end_date:
+        flash("Please select both start and end dates.")
+        return redirect(url_for('resource_details', resource_id=resource_id))
+
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+
+    # Check if the item is already reserved
+    cursor.execute("SELECT availability FROM resources WHERE resource_id = ?", (resource_id,))
+    availability = cursor.fetchone()
+
+    if availability and availability[0] == 'Reserved':
+        flash("This item is already reserved and cannot be reserved again.")
+        conn.close()
+        return redirect(url_for('resource_details', resource_id=resource_id))
+
+    # Insert the new reservation into the reservations table
+    cursor.execute('''
+        INSERT INTO reservations (resource_id, user_id, start_date, end_date)
+        VALUES (?, ?, ?, ?)
+    ''', (resource_id, user_id, start_date, end_date))
+
+    # Update the availability status of the resource to 'Reserved'
+    cursor.execute("UPDATE resources SET availability = 'Reserved' WHERE resource_id = ?", (resource_id,))
+
+    conn.commit()
+    conn.close()
+
+    flash("Reservation made successfully!")
+    return redirect(url_for('resource_details', resource_id=resource_id))
+
+# Flask Route to Reset Availability
+@app.route('/reset_availability/<int:resource_id>', methods=['POST'])
+def reset_availability(resource_id):
+    # Reset the resource's availability to "Available"
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    cursor.execute("UPDATE resources SET availability = 'Available' WHERE resource_id = ?", (resource_id,))
+    conn.commit()
+    conn.close()
+    flash("Resource availability reset to available!")
+    return redirect(url_for('resource_details', resource_id=resource_id))
 
 def get_resources():
     conn = sqlite3.connect('database.db')
@@ -425,7 +535,6 @@ def delete_resource(resource_id):
 
     conn.close()
     return redirect(url_for('dashboard'))
-
 
 
 if __name__ == '__main__':

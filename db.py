@@ -66,6 +66,12 @@ def init_db():
 
     conn.commit()
     conn.close()
+def update_resource_availability(resource_id, status):
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    cursor.execute("UPDATE resources SET availability = ? WHERE resource_id = ?", (status, resource_id))
+    conn.commit()
+    conn.close()
 
 # Function to hash a password with a salt
 def hash_password(password):
