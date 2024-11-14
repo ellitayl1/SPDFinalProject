@@ -22,7 +22,7 @@
                             onblur="saveField('name')" />
                     </p>
                     <p><strong>Email:</strong>
-                        <span id="emailText" >{{ user_info['email'] }}</span>
+                        <span id="emailText">{{ user_info['email'] }}</span>
                         <input type="email" id="emailInput" class="form-control d-none" value="{{ user_info['email'] }}"
                             onblur="saveField('email')" />
                     </p>
@@ -100,12 +100,22 @@
             {% if user_resources %}
             <ul class="list-group">
                 {% for listing in user_resources %}
-                <li class="list-group-item">
+                <div>
                     <h5 class="mb-1">{{ listing[2] }}</h5> <!-- Listing title -->
                     <p class="mb-1">{{ listing[3] }}</p> <!-- Listing description -->
                     <a href="{{ url_for('resource_details', resource_id=listing[0]) }}"
                         class="btn btn-outline-primary btn-sm">View Details</a>
-                </li>
+                </div>
+                <div>
+                <form action="{{ url_for('delete_resource', resource_id=listing[0]) }}" method="POST"onsubmit="return confirmDeletion();" class="ms-3">
+                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                </form>
+                <script>
+                    function confirmDeletion() {
+                        return confirm("Are you sure you want to delete this resource? This action cannot be undone.");
+                    }
+                </script>
+                </div>
                 {% endfor %}
             </ul>
             {% else %}

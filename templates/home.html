@@ -16,24 +16,41 @@
     <!-- Latest Listings Section -->
     <div class="mt-5">
         <h2 class="mb-4">Latest Listings</h2>
-
         <!-- Search Form -->
         <form action="{{ url_for('home') }}" method="GET" class="mb-4">
-            <div class="input-group">
-                <input type="text" class="form-control" name="search" placeholder="Search resources by name"
-                       value="{{ request.args.get('search', '') }}">
-                <button class="btn btn-primary" type="submit">Search</button>
+            <div class="row">
+                <div class="col-md-4 mb-2">
+                    <input type="text" class="form-control" name="search" placeholder="Search by name"
+                        value="{{ request.args.get('search', '') }}">
+                </div>
+                <div class="col-md-4 mb-2">
+                    <select class="form-select" name="category">
+                        <option value="" disabled selected>Filter by category</option>
+                        <option value="Tools">Tools</option>
+                        <option value="Appliances">Appliances</option>
+                        <option value="Furniture">Furniture</option>
+                        <option value="Books">Books</option>
+                        <option value="Clothing">Clothing</option>
+                        <option value="Electronics">Electronics</option>
+                    </select>
+                </div>
+                <div class="col-md-4 mb-2">
+                    <input type="text" class="form-control" name="location" placeholder="Filter by location"
+                        value="{{ request.args.get('location', '') }}">
+                </div>
+                <div class="col-md-12 text-end">
+                    <button class="btn btn-primary" type="submit">Search</button>
+                </div>
             </div>
         </form>
 
-        <!-- Display Resources -->
         <div class="row">
             {% for resource in latest_resources %}
             <div class="col-md-4 mb-4">
                 <div class="card shadow-sm">
                     {% if resource[4] %}
                     <img src="{{ url_for('static', filename=resource[4]) }}" class="card-img-top img-fluid"
-                         alt="{{ resource[2] }}">
+                        alt="{{ resource[2] }}">
                     {% endif %}
                     <div class="card-body">
                         <h5 class="card-title text-capitalize">{{ resource[2] }}</h5> <!-- Title -->
@@ -45,7 +62,29 @@
                             <strong>Date Posted:</strong> {{ resource[7] }}
                         </div>
                         <a href="{{ url_for('resource_details', resource_id=resource[0]) }}"
-                           class="btn btn-primary">View Details</a>
+                            class="btn btn-primary">View Details</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Top Contributors Section -->
+    <div class="mt-5">
+        <h2 class="mb-4">Top Contributors</h2>
+        <div class="row justify-content-center">
+            {% for contributor in top_contributors %}
+            <div class="col-md-2 mb-4 text-center">
+                <div class="card shadow-sm">
+                    <div class="d-flex justify-content-center">
+                        <img src="{{ url_for('static', filename=contributor[2] if contributor[2] else 'uploads/default-profile.png') }}" 
+                             class="card-img-top rounded-circle mt-3" alt="{{ contributor[1] }}" 
+                             style="width: 80px; height: 80px; object-fit: cover;">
+                    </div>
+                    <div class="card-body">
+                        <h6 class="card-title">{{ contributor[1] }}</h6> <!-- User name -->
+                        <p class="text-muted small">{{ contributor[3] }} Reviews</p> <!-- Number of reviews -->
                     </div>
                 </div>
             </div>

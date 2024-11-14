@@ -28,6 +28,7 @@ def init_db():
                         category TEXT,
                         availability TEXT,
                         date_posted TEXT NOT NULL,
+                        location TEXT,
                         FOREIGN KEY (user_id) REFERENCES users(user_id)
                       )''')
     
@@ -45,15 +46,18 @@ def init_db():
                    
     # Create Reviews table
     cursor.execute('''CREATE TABLE IF NOT EXISTS reviews (
-                        review_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        user_id INTEGER NOT NULL,
-                        reviewer_id INTEGER NOT NULL,
-                        rating INTEGER NOT NULL,
-                        comment TEXT,
-                        timestamp TEXT NOT NULL,
-                        FOREIGN KEY (user_id) REFERENCES users(user_id),
-                        FOREIGN KEY (reviewer_id) REFERENCES users(user_id)
-                      )''')
+    review_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    resource_id INTEGER NULL,
+    user_id INTEGER NOT NULL,
+    reviewer_id INTEGER, 
+    rating INTEGER NOT NULL,
+    comment TEXT,
+    date TEXT,
+    FOREIGN KEY (resource_id) REFERENCES resources(resource_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    FOREIGN KEY (reviewer_id) REFERENCES users(user_id)
+);
+''')
     cursor.execute('''CREATE TABLE IF NOT EXISTS reservations (
             reservation_id INTEGER PRIMARY KEY AUTOINCREMENT,
             resource_id INTEGER NOT NULL,
@@ -63,7 +67,7 @@ def init_db():
             FOREIGN KEY (resource_id) REFERENCES resources(resource_id),
             FOREIGN KEY (user_id) REFERENCES users(user_id)
         )''')
-
+  
     conn.commit()
     conn.close()
 def update_resource_availability(resource_id, status):
@@ -173,7 +177,7 @@ def add_review(user_id, reviewer_id, rating, comment):
     # Insert the review into the reviews table
     try:
         cursor.execute(
-            '''INSERT INTO reviews (user_id, reviewer_id, rating, comment, timestamp) 
+            '''INSERT INTO reviews (user_id, reviewer_id, rating, comment, date) 
                VALUES (?, ?, ?, ?, ?)''',
             (user_id, reviewer_id, rating, comment, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         )

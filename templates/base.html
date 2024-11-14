@@ -64,7 +64,18 @@
             </ul>
         </div>
     </nav>
-
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="container mt-3">
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}" role="alert">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+  
 
     <!-- Main Content -->
     <div class="container mt-4">

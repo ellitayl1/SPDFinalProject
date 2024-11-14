@@ -29,20 +29,48 @@ init_db()
 @app.route('/')
 def home():
     search_query = request.args.get('search')
+    category_filter = request.args.get('category')
+    location_filter = request.args.get('location')
+    
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
 
-    if search_query:
-        # Use a SQL query to search for resources by name
-        cursor.execute("SELECT * FROM resources WHERE title LIKE ?", ('%' + search_query + '%',))
-    else:
-        # Fetch all resources if there's no search query
-        cursor.execute("SELECT * FROM resources")
+    # Construct the query dynamically based on the filters
+    query = "SELECT * FROM resources WHERE 1=1"
+    params = []
 
+    if search_query:
+        query += " AND title LIKE ?"
+        params.append('%' + search_query + '%')
+    
+    if category_filter:
+        query += " AND category = ?"
+        params.append(category_filter)
+    
+    if location_filter:
+        query += " AND location LIKE ?"
+        params.append('%' + location_filter + '%')
+
+    cursor.execute(query, params)
     latest_resources = cursor.fetchall()
+
+    # Fetch top contributors (users who have contributed the most reviews)
+    cursor.execute('''
+        SELECT users.user_id, users.name, users.profile_image, COUNT(reviews.review_id) as review_count
+        FROM users
+        JOIN reviews ON users.user_id = reviews.reviewer_id
+        GROUP BY users.user_id
+        ORDER BY review_count DESC
+        LIMIT 5
+    ''')
+    top_contributors = cursor.fetchall()
+
     conn.close()
 
-    return render_template('home.html', latest_resources=latest_resources)
+    return render_template('home.html', latest_resources=latest_resources, top_contributors=top_contributors)
+
+
+
 
 init_db()
 
@@ -149,11 +177,11 @@ def dashboard():
     user_messages = cursor.fetchall()
 
     # Fetch user reviews
-    cursor.execute('''SELECT reviews.rating, reviews.comment, users.name, reviews.timestamp
+    cursor.execute('''SELECT reviews.rating, reviews.comment, users.name, reviews.date
                       FROM reviews
-                      JOIN users ON reviews.reviewer_id = users.user_id
+                      JOIN users ON reviews.user_id = users.user_id
                       WHERE reviews.user_id = ?
-                      ORDER BY reviews.timestamp DESC''', (user_id,))
+                      ORDER BY reviews.date DESC''', (user_id,))
     user_reviews = cursor.fetchall()
 
     # Check for new messages
@@ -242,7 +270,7 @@ def resource_details(resource_id):
     resource = cursor.fetchone()
 
     # Fetch reservations for this resource
-    cursor.execute('''SELECT start_date, end_date FROM reservations WHERE resource_id = ?''', (resource_id,))
+    cursor.execute("SELECT start_date, end_date FROM reservations WHERE resource_id = ?", (resource_id,))
     reservations = cursor.fetchall()
 
     # Convert reservations into a list of dictionaries for JSON serialization
@@ -250,13 +278,24 @@ def resource_details(resource_id):
         {"start_date": r[0], "end_date": r[1]} for r in reservations if r[0] and r[1]
     ]
 
+    # Fetch reviews with reviewer names
+    cursor.execute('''
+        SELECT reviews.rating, reviews.comment, users.name, reviews.date
+        FROM reviews
+        JOIN users ON reviews.reviewer_id = users.user_id
+        WHERE reviews.resource_id = ?
+    ''', (resource_id,))
+    reviews = cursor.fetchall()
+
     conn.close()
 
     return render_template(
         'resource_details.html',
         resource=resource,
-        unavailable_dates=unavailable_dates
+        unavailable_dates=unavailable_dates,
+        reviews=reviews
     )
+
 
 @app.route('/reserve_resource', methods=['POST'])
 def reserve_resource():
@@ -369,6 +408,7 @@ def add_resource():
         description = request.form.get('description')
         category = request.form.get('category')
         availability = request.form.get('availability')
+        location = request.form.get('location')  # Added location field
         user_id = session['user_id']
         file = request.files.get('image')  # Changed 'images' to 'image'
 
@@ -386,9 +426,17 @@ def add_resource():
             flash("Please upload a valid JPG image.")
             return redirect(url_for('add_resource'))
 
-        # Save the resource with the uploaded image path and other fields
+        # Save the resource with the uploaded image path and other fields, including location
         try:
-            save_resource(user_id, title, description, image_path, category, availability)
+            conn = sqlite3.connect('database.db')
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO resources (user_id, title, description, images, category, availability, location, date_posted)
+                VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+            ''', (user_id, title, description, image_path, category, availability, location))
+            conn.commit()
+            conn.close()
+
             flash("Resource added successfully!")
             return redirect(url_for('home'))
         except ValueError as e:
@@ -396,6 +444,7 @@ def add_resource():
             return redirect(url_for('add_resource'))
     
     return render_template('add_resource.html')
+
 
 @app.route('/messages', methods=['GET', 'POST'])
 def messages():
@@ -486,8 +535,6 @@ def add_review_route(resource_id):
             flash("Rating must be between 1 and 5.")
             return redirect(url_for('resource_details', resource_id=resource_id))
         
-        # Get the user_id for the resource (user being reviewed)
-        user_id = get_user_id_by_resource_id(resource_id)
         # Get the reviewer_id from the session (current logged-in user)
         reviewer_id = session.get('user_id')
 
@@ -495,8 +542,17 @@ def add_review_route(resource_id):
             flash("You must be logged in to submit a review.")
             return redirect(url_for('login'))
 
-        # Call the add_review function from db.py
-        add_review(user_id, reviewer_id, rating, comment)
+        # Add the review with the correct resource_id
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO reviews (resource_id, user_id, reviewer_id, rating, comment, date)
+            VALUES (?, ?, ?, ?, ?, datetime('now'))
+        ''', (resource_id, reviewer_id, reviewer_id, rating, comment))  # Note: Using `reviewer_id` for `user_id` as well
+
+        conn.commit()
+        conn.close()
+
         flash("Review submitted successfully.")
     except ValueError:
         flash("Invalid input for rating. Please enter a number between 1 and 5.")
@@ -505,6 +561,7 @@ def add_review_route(resource_id):
 
     # Redirect back to the correct resource details page
     return redirect(url_for('resource_details', resource_id=resource_id))
+
 
 @app.route('/logout')
 def logout():
@@ -515,26 +572,39 @@ def logout():
 @app.route('/delete_resource/<int:resource_id>', methods=['POST'])
 def delete_resource(resource_id):
     if 'user_id' not in session:
+        flash("Please log in to manage your resources.", "danger")
         return redirect(url_for('login'))
     
     user_id = session['user_id']
-    conn = sqlite3.connect('database.db')
-    cursor = conn.cursor()
+    conn = None
 
-    # Check if the logged-in user is the owner of the resource
-    cursor.execute("SELECT user_id FROM resources WHERE resource_id = ?", (resource_id,))
-    result = cursor.fetchone()
+    try:
+        # Connect to the database
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
 
-    if result and result[0] == user_id:
-        # User is the owner; proceed with deletion
-        cursor.execute("DELETE FROM resources WHERE resource_id = ?", (resource_id,))
-        conn.commit()
-        flash("Resource deleted successfully!")
-    else:
-        flash("You are not authorized to delete this resource.")
+        # Check if the logged-in user is the owner of the resource
+        cursor.execute("SELECT user_id FROM resources WHERE resource_id = ?", (resource_id,))
+        result = cursor.fetchone()
 
-    conn.close()
+        if result and result[0] == user_id:
+            # User is the owner; proceed with deletion
+            cursor.execute("DELETE FROM resources WHERE resource_id = ?", (resource_id,))
+            conn.commit()
+            flash("Resource deleted successfully!", "success")
+        else:
+            flash("You are not authorized to delete this resource.", "danger")
+    except sqlite3.Error as e:
+        flash("An error occurred while trying to delete the resource. Please try again later.", "danger")
+        print(f"Database error: {e}")
+    finally:
+        if conn:
+            conn.close()
+
     return redirect(url_for('dashboard'))
+
+
+
 
 
 if __name__ == '__main__':

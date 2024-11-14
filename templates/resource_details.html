@@ -15,6 +15,9 @@
                 <div class="text-muted mb-2">
                     <strong>Availability:</strong> <span class="text-dark">{{ resource[6] }}</span>
                 </div>
+                <div class="text-muted mb-2">
+                    <strong>Location:</strong> <span class="text-dark">{{ resource[8] }}</span> <!-- Location -->
+                </div>
                 <div class="text-muted">
                     <strong>Date Posted:</strong> <span class="text-dark">{{ resource[7] }}</span>
                 </div>
@@ -76,9 +79,9 @@
         {% for review in reviews %}
         <li class="list-group-item">
             <div>
-                <strong>Rating:</strong> {{ review[1] }} / 5 <!-- Display the numeric rating -->
-                <p class="mb-1">{{ review[2] }}</p> <!-- Display Comment/Description -->
-                <small class="text-muted">Reviewed by {{ review[4] }} on {{ review[3] }}</small>
+                <strong>Rating:</strong> {{ review[0] }} / 5 <!-- Display the numeric rating -->
+                <p class="mb-1">{{ review[1] }}</p> <!-- Display Comment/Description -->
+                <small class="text-muted">Reviewed by {{ review[2] }} on {{ review[3] }}</small>
                 <!-- Display Reviewer Name and Date -->
             </div>
         </li>
@@ -101,4 +104,9 @@
         <button type="submit" class="btn btn-primary">Submit Review</button>
     </form>
 </div>
+
+
+
+
+
 {% endblock %}
