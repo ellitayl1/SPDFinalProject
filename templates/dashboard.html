@@ -1,50 +1,159 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard{% endblock %}
+{% block title %}Your Dashboard{% endblock %}
 
 {% block content %}
-<h2>Your Dashboard</h2>
+<div class="container mt-5">
+    <div class="text-center mb-4">
+        <h1 class="display-4">Your Dashboard</h1>
+        <p class="lead">Manage your listings, messages, and reviews, and view your profile information.</p>
+    </div>
 
-<!-- Link to Messages Page -->
-<a href="{{ url_for('messages') }}" class="button">Go to Messages</a> <!-- Added button/link -->
+    <!-- Profile Information Section -->
 
-<section>
-    <h3>Your Listings</h3>
-    <ul>
-        {% for resource in user_resources %}
-            <li>
-                <h4>{{ resource[2] }}</h4>
-                <p>{{ resource[3] }}</p>
-                <a href="{{ url_for('resource_details', resource_id=resource[0]) }}">View Details</a>
-            </li>
-        {% endfor %}
-    </ul>
-    <a href="{{ url_for('add_resource') }}">Add New Listing</a>
-</section>
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h4 class="card-title">Profile Information</h4>
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <p><strong>Name:</strong>
+                        <span id="nameText" onclick="editField('name')">{{ user_info['name'] }}</span>
+                        <input type="text" id="nameInput" class="form-control d-none" value="{{ user_info['name'] }}"
+                            onblur="saveField('name')" />
+                    </p>
+                    <p><strong>Email:</strong>
+                        <span id="emailText" >{{ user_info['email'] }}</span>
+                        <input type="email" id="emailInput" class="form-control d-none" value="{{ user_info['email'] }}"
+                            onblur="saveField('email')" />
+                    </p>
+                    <p><strong>Location:</strong>
+                        <span id="locationText" onclick="editField('location')">{{ user_info['location'] }}</span>
+                        <input type="text" id="locationInput" class="form-control d-none"
+                            value="{{ user_info['location'] }}" onblur="saveField('location')" />
+                    </p>
+                </div>
+                <div class="col-md-4 text-md-end text-center">
+                    <img src="{{ url_for('static', filename=user_info['profile_image'] if user_info['profile_image'] else 'uploads/default-profile.png') }}"
+                        class="img-fluid rounded-circle shadow-sm mb-3" alt="Profile Image"
+                        style="width: 150px; height: 150px;">
+                    <!-- Form to Upload a New Profile Image -->
+                    <form action="{{ url_for('upload_profile_image') }}" method="POST" enctype="multipart/form-data"
+                        class="text-end">
+                        <div class="mb-3">
+                            <input type="file" class="form-control" id="profileImage" name="profile_image"
+                                accept="image/*">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Upload Image</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<section>
-    <h3>Messages</h3>
-    <ul>
-        {% for message in user_messages %}
-            <li>
-                <strong>From:</strong> User {{ message[1] }}
-                <p>{{ message[3] }}</p>
-                <small>{{ message[4] }}</small>
-            </li>
-        {% endfor %}
-    </ul>
-</section>
+    <script>
+        // Function to make the text field editable
+        function editField(field) {
+            document.getElementById(field + 'Text').classList.add('d-none');
+            document.getElementById(field + 'Input').classList.remove('d-none');
+            document.getElementById(field + 'Input').focus();
+        }
 
-<section>
-    <h3>Reviews</h3>
-    <ul>
-        {% for review in user_reviews %}
-            <li>
-                <strong>Rating:</strong> {{ review[2] }}
-                <p>{{ review[4] }}</p>
-                <small>Reviewed by {{ review[1] }} on {{ review[5] }}</small>
-            </li>
-        {% endfor %}
-    </ul>
-</section>
+        // Function to save the edited field
+        function saveField(field) {
+            const inputElement = document.getElementById(field + 'Input');
+            const textElement = document.getElementById(field + 'Text');
+            const newValue = inputElement.value;
+
+            // Hide input and show text
+            inputElement.classList.add('d-none');
+            textElement.classList.remove('d-none');
+            textElement.textContent = newValue;
+
+            // Make an AJAX request to update the profile
+            fetch('/update_profile', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    field: field,
+                    value: newValue
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        console.log('Profile updated successfully');
+                    } else {
+                        console.error('Failed to update profile');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+    </script>
+
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h4 class="card-title">Your Listings</h4>
+            {% if user_resources %}
+            <ul class="list-group">
+                {% for listing in user_resources %}
+                <li class="list-group-item">
+                    <h5 class="mb-1">{{ listing[2] }}</h5> <!-- Listing title -->
+                    <p class="mb-1">{{ listing[3] }}</p> <!-- Listing description -->
+                    <a href="{{ url_for('resource_details', resource_id=listing[0]) }}"
+                        class="btn btn-outline-primary btn-sm">View Details</a>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted">You have no active listings.</p>
+            {% endif %}
+            <a href="{{ url_for('add_resource') }}" class="btn btn-primary mt-3">Add New Listing</a>
+        </div>
+    </div>
+
+    <!-- Messages Section -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h4 class="card-title">Messages</h4>
+            {% if new_messages %}
+            <p>You have new messages from:</p>
+            <ul class="list-group">
+                {% for message in new_messages %}
+                <li class="list-group-item">
+                    <strong>{{ message[0] }}</strong> <!-- Sender's name -->
+                    <span class="text-muted">({{ message[1] }})</span> <!-- Timestamp -->
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted">No new messages.</p>
+            {% endif %}
+            <a href="{{ url_for('messages') }}" class="btn btn-outline-primary mt-2">Go to Messages</a>
+        </div>
+    </div>
+
+    <!-- Reviews Section -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h4 class="card-title">Reviews</h4>
+            {% if user_reviews %}
+            <ul class="list-group">
+                {% for review in user_reviews %}
+                <li class="list-group-item">
+                    <strong>Rating:</strong> {{ review[0] }} / 5
+                    <p class="mb-1">{{ review[1] }}</p> <!-- Review comment -->
+                    <small class="text-muted">Reviewed by {{ review[2] }} on {{ review[3] }}</small>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted">No reviews yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
 {% endblock %}

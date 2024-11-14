@@ -1,45 +1,60 @@
 {% extends "base.html" %}
 
-{% block title %}Add Resource{% endblock %}
+{% block title %}Add New Resource{% endblock %}
 
 {% block content %}
-<h2>Add New Resource</h2>
-<form method="POST" action="{{ url_for('add_resource') }}" enctype="multipart/form-data">
-    <label for="title">Title:</label>
-    <input type="text" id="title" name="title" required>
-    <br>
-    
-    <label for="description">Description:</label>
-    <textarea id="description" name="description"></textarea>
-    <br>
-    
-    <label for="images">Upload Image (JPG only):</label>
-    <input type="file" id="images" name="images" accept=".jpg,.jpeg" required>
-    <br>
-    
-    <!-- Dropdown for Category -->
-    <label for="category">Category:</label>
-    <select id="category" name="category" required>
-        <option value="">Select a category</option>
-        <option value="Tools">Tools</option>
-        <option value="Appliances">Appliances</option>
-        <option value="Electronics">Electronics</option>
-        <option value="Furniture">Furniture</option>
-        <option value="Gardening">Gardening</option>
-        <option value="Books">Books</option>
-    </select>
-    <br>
-    
-    <!-- Dropdown for Availability -->
-    <label for="availability">Availability:</label>
-    <select id="availability" name="availability" required>
-        <option value="">Select availability status</option>
-        <option value="Available">Available</option>
-        <option value="Reserved">Reserved</option>
-        <option value="Unavailable">Unavailable</option>
-    </select>
-    <br>
-    
-    <button type="submit">Add Resource</button>
-</form>
+<div class="container mt-5">
+    <div class="text-center mb-4">
+        <h1 class="display-5">Add New Resource</h1>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form action="{{ url_for('add_resource') }}" method="POST" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label for="title" class="form-label"><strong>Title:</strong></label>
+                    <input type="text" class="form-control" id="title" name="title" required>
+                </div>
+            
+                <div class="mb-3">
+                    <label for="description" class="form-label"><strong>Description:</strong></label>
+                    <textarea class="form-control" id="description" name="description" rows="4" required></textarea>
+                </div>
+            
+                <div class="mb-3">
+                    <label for="image" class="form-label"><strong>Upload Image (JPG only):</strong></label>
+                    <input type="file" class="form-control" id="image" name="image" accept=".jpg" required>
+                </div>
+            
+                <div class="mb-3">
+                    <label for="category" class="form-label"><strong>Category:</strong></label>
+                    <select class="form-select" id="category" name="category" required>
+                        <option value="" disabled selected>Select a category</option>
+                        <option value="Tools">Tools</option>
+                        <option value="Appliances">Appliances</option>
+                        <option value="Furniture">Furniture</option>
+                        <option value="Books">Books</option>
+                        <option value="Clothing">Clothing</option>
+                        <option value="Electronics">Electronics</option>
+                    </select>
+                </div>
+            
+                <div class="mb-3">
+                    <label for="availability" class="form-label"><strong>Availability:</strong></label>
+                    <select class="form-select" id="availability" name="availability" required>
+                        <option value="" disabled selected>Select availability status</option>
+                        <option value="Available">Available</option>
+                        <option value="Reserved">Reserved</option>
+                        <option value="Unavailable">Unavailable</option>
+                    </select>
+                </div>
+            
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary">Add Resource</button>
+                </div>
+            </form>
+            
+        </div>
+    </div>
+</div>
 {% endblock %}

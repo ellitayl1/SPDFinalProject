@@ -1,31 +1,43 @@
 {% extends "base.html" %}
 
-{% block title %}Home{% endblock %}
+{% block title %}Smart Neighborhood Exchange{% endblock %}
 
 {% block content %}
-<h2 class="mb-4">Welcome to Smart Neighborhood Exchange</h2>
+<div class="container mt-5">
+    <!-- Hero Section -->
+    <div class="jumbotron text-center bg-light p-5 rounded shadow-sm">
+        <h1 class="display-4">Welcome to Smart Neighborhood Exchange</h1>
+        <p class="lead">Connecting neighbors for seamless sharing and exchange of resources in your community.</p>
+        <hr class="my-4">
+        <p>Find, share, and borrow items easily while building a stronger and more resourceful neighborhood.</p>
+        <a class="btn btn-primary btn-lg" href="{{ url_for('dashboard') }}" role="button">Get Started</a>
+    </div>
 
-<h3>Latest Listings</h3>
-<div class="row">
-    {% for resource in latest_resources %}
-        <div class="col-md-4 mb-4">
-            <div class="card">
-                {% if resource[4] %}
-                    <img src="{{ url_for('static', filename=resource[4]) }}" class="card-img-top" alt="Resource Image">
-                {% endif %}
-                <div class="card-body">
-                    <h5 class="card-title">{{ resource[2] }}</h5> <!-- Title -->
-                    <p class="card-text">{{ resource[3] }}</p> <!-- Description -->
-                    <p><strong>Category:</strong> {{ resource[5] }}</p>
-                    <p><strong>Date Posted:</strong> {{ resource[7] }}</p>
-                    <a href="{{ url_for('resource_details', resource_id=resource[0]) }}" class="btn btn-primary">View Details</a>
+    <!-- Latest Listings Section -->
+    <div class="mt-5">
+        <h2 class="mb-4">Latest Listings</h2>
+        <div class="row">
+            {% for resource in latest_resources %}
+                <div class="col-md-4 mb-4">
+                    <div class="card shadow-sm">
+                        {% if resource[4] %}
+                            <img src="{{ url_for('static', filename=resource[4]) }}" class="card-img-top img-fluid" alt="{{ resource[2] }}">
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title text-capitalize">{{ resource[2] }}</h5> <!-- Title -->
+                            <p class="card-text">{{ resource[3] }}</p> <!-- Description -->
+                            <div class="text-muted mb-2">
+                                <strong>Category:</strong> {{ resource[5] }}
+                            </div>
+                            <div class="text-muted mb-2">
+                                <strong>Date Posted:</strong> {{ resource[7] }}
+                            </div>
+                            <a href="{{ url_for('resource_details', resource_id=resource[0]) }}" class="btn btn-primary">View Details</a>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            {% endfor %}
         </div>
-    {% endfor %}
+    </div>
 </div>
-
-{% if not latest_resources %}
-    <p>No listings available at the moment.</p>
-{% endif %}
 {% endblock %}
