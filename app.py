@@ -80,8 +80,14 @@ def register():
         name = request.form.get('name')
         email = request.form.get('email')
         password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')  # Get the confirm password field
         location = request.form.get('location')
         profile_image = 'uploads/default-profile.png'  # Default profile image
+
+        # Check if the passwords match
+        if password != confirm_password:
+            flash('Passwords do not match. Please try again.', 'danger')
+            return redirect(url_for('register'))
 
         # Connect to the database
         conn = sqlite3.connect('database.db')
@@ -110,6 +116,7 @@ def register():
             conn.close()
 
     return render_template('register.html')
+
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -231,6 +238,8 @@ def update_profile():
     finally:
         conn.close()
 
+import os
+
 @app.route('/upload_profile_image', methods=['POST'])
 def upload_profile_image():
     user_id = session.get('user_id')
@@ -249,9 +258,17 @@ def upload_profile_image():
 
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(file_path)
         
+        # Use os.path.join for cross-platform compatibility
+        upload_folder = os.path.join(app.root_path, 'static', 'uploads')
+        
+        # Ensure the upload folder exists
+        if not os.path.exists(upload_folder):
+            os.makedirs(upload_folder)
+        
+        file_path = os.path.join(upload_folder, filename)
+        file.save(file_path)
+
         # Update the profile image path in the database
         update_profile_image(user_id, f'uploads/{filename}')
         flash('Profile image updated successfully!')
@@ -259,6 +276,7 @@ def upload_profile_image():
 
     flash('Invalid file type')
     return redirect(url_for('dashboard'))
+
 # Example route for resource details
 @app.route('/resource_details/<int:resource_id>')
 def resource_details(resource_id):
@@ -608,4 +626,4 @@ def delete_resource(resource_id):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug= True)

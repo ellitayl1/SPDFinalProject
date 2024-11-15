@@ -71,16 +71,53 @@
     </div>
 
     <!-- Top Contributors Section -->
+    <style>
+        .top-contributors-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            text-align: center;
+            padding: 10px;
+            width: 100%; /* Adjust to fit the text */
+            overflow: hidden;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+    
+        .top-contributors-card img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 10px;
+        }
+    
+        .top-contributors-card .card-title {
+            font-weight: bold;
+            font-size: 1rem;
+            margin-bottom: 5px;
+            word-wrap: break-word;
+        }
+    
+        .top-contributors-card .text-muted {
+            font-size: 0.9rem;
+            color: gray;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+    </style>
+    
     <div class="mt-5">
         <h2 class="mb-4">Top Contributors</h2>
         <div class="row justify-content-center">
             {% for contributor in top_contributors %}
             <div class="col-md-2 mb-4 text-center">
-                <div class="card shadow-sm">
+                <div class="card top-contributors-card">
                     <div class="d-flex justify-content-center">
                         <img src="{{ url_for('static', filename=contributor[2] if contributor[2] else 'uploads/default-profile.png') }}" 
-                             class="card-img-top rounded-circle mt-3" alt="{{ contributor[1] }}" 
-                             style="width: 80px; height: 80px; object-fit: cover;">
+                             class="card-img-top rounded-circle mt-3" alt="{{ contributor[1] }}">
                     </div>
                     <div class="card-body">
                         <h6 class="card-title">{{ contributor[1] }}</h6> <!-- User name -->
@@ -91,5 +128,6 @@
             {% endfor %}
         </div>
     </div>
+    
 </div>
 {% endblock %}
