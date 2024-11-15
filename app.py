@@ -276,6 +276,46 @@ def upload_profile_image():
 
     flash('Invalid file type')
     return redirect(url_for('dashboard'))
+@app.route('/edit_resource/<int:resource_id>', methods=['GET', 'POST'])
+def edit_resource(resource_id):
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('login'))
+
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+
+    # Check if the user is the owner of the resource
+    cursor.execute("SELECT * FROM resources WHERE resource_id = ? AND user_id = ?", (resource_id, user_id))
+    resource = cursor.fetchone()
+
+    if not resource:
+        flash("You are not authorized to edit this resource.", "danger")
+        conn.close()
+        return redirect(url_for('dashboard'))
+
+    if request.method == 'POST':
+        # Get updated details from the form
+        title = request.form.get('title')
+        description = request.form.get('description')
+        category = request.form.get('category')
+        availability = request.form.get('availability')
+        location = request.form.get('location')
+
+        # Update the resource in the database
+        cursor.execute('''
+            UPDATE resources
+            SET title = ?, description = ?, category = ?, availability = ?, location = ?
+            WHERE resource_id = ? AND user_id = ?
+        ''', (title, description, category, availability, location, resource_id, user_id))
+        
+        conn.commit()
+        conn.close()
+        flash("Resource updated successfully!", "success")
+        return redirect(url_for('dashboard'))
+
+    conn.close()
+    return render_template('edit_resource.html', resource=resource)
 
 # Example route for resource details
 @app.route('/resource_details/<int:resource_id>')

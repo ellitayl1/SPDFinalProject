@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Resource{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="display-4">Edit Resource</h1>
+    <hr>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    <form action="{{ url_for('edit_resource', resource_id=resource[0]) }}" method="POST">
+        <div class="mb-3">
+            <label for="title" class="form-label">Title:</label>
+            <input type="text" class="form-control" id="title" name="title" value="{{ resource[2] }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="description" class="form-label">Description:</label>
+            <textarea class="form-control" id="description" name="description" rows="4" required>{{ resource[3] }}</textarea>
+        </div>
+        <div class="mb-3">
+            <label for="category" class="form-label">Category:</label>
+            <select class="form-select" id="category" name="category" required>
+                <option value="Tools" {% if resource[5] == "Tools" %}selected{% endif %}>Tools</option>
+                <option value="Appliances" {% if resource[5] == "Appliances" %}selected{% endif %}>Appliances</option>
+                <option value="Furniture" {% if resource[5] == "Furniture" %}selected{% endif %}>Furniture</option>
+                <option value="Books" {% if resource[5] == "Books" %}selected{% endif %}>Books</option>
+                <option value="Clothing" {% if resource[5] == "Clothing" %}selected{% endif %}>Clothing</option>
+                <option value="Electronics" {% if resource[5] == "Electronics" %}selected{% endif %}>Electronics</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="availability" class="form-label">Availability:</label>
+            <select class="form-select" id="availability" name="availability" required>
+                <option value="Available" {% if resource[6] == "Available" %}selected{% endif %}>Available</option>
+                <option value="Reserved" {% if resource[6] == "Reserved" %}selected{% endif %}>Reserved</option>
+                <option value="Unavailable" {% if resource[6] == "Unavailable" %}selected{% endif %}>Unavailable</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="location" class="form-label">Location:</label>
+            <input type="text" class="form-control" id="location" name="location" value="{{ resource[8] }}" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Update Resource</button>
+    </form>
+</div>
+{% endblock %}
+        
