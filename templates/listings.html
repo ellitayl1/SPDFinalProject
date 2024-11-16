@@ -4,60 +4,61 @@
 
 {% block content %}
 <div class="container mt-5">
-    <h1 class="display-4 mb-4">All Listings</h1>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="display-5">All Listings</h1>
+        <a href="{{ url_for('add_resource') }}" class="btn btn-primary">Add New Listing</a>
+    </div>
 
-    <!-- Search Bar -->
+    <!-- Search Form -->
     <form action="{{ url_for('listings') }}" method="GET" class="mb-4">
-        <div class="row">
+        <div class="row g-2">
             <div class="col-md-4">
-                <input type="text" class="form-control" name="search" placeholder="Search resources by name" value="{{ request.args.get('search', '') }}">
+                <input type="text" class="form-control" name="search" placeholder="Search by name"
+                    value="{{ request.args.get('search', '') }}">
             </div>
             <div class="col-md-3">
                 <select class="form-select" name="category">
-                    <option value="">All Categories</option>
-                    <option value="Tools" {% if request.args.get('category') == 'Tools' %}selected{% endif %}>Tools</option>
-                    <option value="Appliances" {% if request.args.get('category') == 'Appliances' %}selected{% endif %}>Appliances</option>
-                    <option value="Furniture" {% if request.args.get('category') == 'Furniture' %}selected{% endif %}>Furniture</option>
-                    <option value="Books" {% if request.args.get('category') == 'Books' %}selected{% endif %}>Books</option>
-                    <option value="Clothing" {% if request.args.get('category') == 'Clothing' %}selected{% endif %}>Clothing</option>
-                    <option value="Electronics" {% if request.args.get('category') == 'Electronics' %}selected{% endif %}>Electronics</option>
+                    <option value="">Filter by Category</option>
+                    <option value="Tools">Tools</option>
+                    <option value="Appliances">Appliances</option>
+                    <option value="Furniture">Furniture</option>
+                    <option value="Books">Books</option>
+                    <option value="Clothing">Clothing</option>
+                    <option value="Electronics">Electronics</option>
                 </select>
             </div>
             <div class="col-md-3">
-                <input type="text" class="form-control" name="location" placeholder="Location" value="{{ request.args.get('location', '') }}">
+                <input type="text" class="form-control" name="location" placeholder="Search by location"
+                    value="{{ request.args.get('location', '') }}">
             </div>
             <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100">Search</button>
+                <button class="btn btn-primary w-100" type="submit">Search</button>
             </div>
         </div>
     </form>
 
-    <!-- Listings -->
-    <div class="row">
-        {% for resource in all_resources %}
-        <div class="col-md-4 mb-4">
-            <div class="card shadow-sm">
-                {% if resource[4] %}
-                <img src="{{ url_for('static', filename=resource[4]) }}" class="card-img-top img-fluid" alt="{{ resource[2] }}">
-                {% endif %}
-                <div class="card-body">
-                    <h5 class="card-title text-capitalize">{{ resource[2] }}</h5> <!-- Title -->
-                    <p class="card-text">{{ resource[3] }}</p> <!-- Description -->
-                    <div class="text-muted mb-2">
-                        <strong>Category:</strong> {{ resource[5] }}
+    <!-- Display Listings -->
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% if all_resources %}
+            {% for resource in all_resources %}
+            <div class="col">
+                <div class="card shadow-sm h-100">
+                    {% if resource[4] %}
+                    <img src="{{ url_for('static', filename=resource[4]) }}" class="card-img-top" alt="{{ resource[2] }}">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ resource[2] }}</h5> <!-- Title -->
+                        <p class="card-text text-truncate">{{ resource[3] }}</p> <!-- Description -->
+                        <p class="text-muted small mb-1">Category: {{ resource[5] }}</p>
+                        <p class="text-muted small">Location: {{ resource[8] }}</p>
+                        <a href="{{ url_for('resource_details', resource_id=resource[0]) }}" class="btn btn-primary btn-sm mt-2">View Details</a>
                     </div>
-                    <div class="text-muted mb-2">
-                        <strong>Location:</strong> {{ resource[8] }}
-                    </div>
-                    <a href="{{ url_for('resource_details', resource_id=resource[0]) }}" class="btn btn-outline-primary btn-sm">View Details</a>
                 </div>
             </div>
-        </div>
-        {% endfor %}
+            {% endfor %}
+        {% else %}
+            <p class="text-muted">No listings found.</p>
+        {% endif %}
     </div>
-
-    {% if not all_resources %}
-    <p class="text-muted text-center">No resources found.</p>
-    {% endif %}
 </div>
 {% endblock %}
