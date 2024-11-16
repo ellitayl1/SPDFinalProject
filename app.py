@@ -1,6 +1,7 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 from datetime import datetime
 from db import (
@@ -73,6 +74,7 @@ def home():
 
 
 init_db()
+from werkzeug.security import generate_password_hash  # Import for password hashing
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -89,6 +91,9 @@ def register():
             flash('Passwords do not match. Please try again.', 'danger')
             return redirect(url_for('register'))
 
+        # Hash the password
+        hashed_password = generate_password_hash(password, method='sha256')
+
         # Connect to the database
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
@@ -102,12 +107,12 @@ def register():
                 flash('Registration unsuccessful. Email already in use.', 'danger')
                 return redirect(url_for('register'))
 
-            # Insert the new user into the database
+            # Insert the new user into the database with the hashed password
             cursor.execute('''INSERT INTO users (name, email, password, location, profile_image)
                               VALUES (?, ?, ?, ?, ?)''',
-                           (name, email, password, location, profile_image))
+                           (name, email, hashed_password, location, profile_image))
             conn.commit()
-            flash('Registered successfully!')
+            flash('Registered successfully!', 'success')
             return redirect(url_for('login'))
         except Exception as e:
             flash('Registration unsuccessful. Please try again.', 'danger')
@@ -118,6 +123,8 @@ def register():
     return render_template('register.html')
 
 
+
+from werkzeug.security import check_password_hash  # Import for password verification
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -134,7 +141,8 @@ def login():
         user = cursor.fetchone()
         conn.close()
 
-        if user and user[1] == password:  # Check if user exists and the password matches
+        # Check if user exists and if the password hash matches
+        if user and check_password_hash(user[1], password):
             session['user_id'] = user[0]
             flash('Login successful!', 'success')
             return redirect(url_for('dashboard'))
@@ -143,6 +151,7 @@ def login():
             return redirect(url_for('login'))
 
     return render_template('login.html')
+
 
 
 @app.route('/dashboard')
@@ -661,6 +670,36 @@ def delete_resource(resource_id):
 
     return redirect(url_for('dashboard'))
 
+@app.route('/listings', methods=['GET'])
+def listings():
+    search_query = request.args.get('search')
+    category_filter = request.args.get('category')
+    location_filter = request.args.get('location')
+    
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+
+    # Construct the query dynamically based on the filters
+    query = "SELECT * FROM resources WHERE 1=1"
+    params = []
+
+    if search_query:
+        query += " AND title LIKE ?"
+        params.append('%' + search_query + '%')
+    
+    if category_filter:
+        query += " AND category = ?"
+        params.append(category_filter)
+    
+    if location_filter:
+        query += " AND location LIKE ?"
+        params.append('%' + location_filter + '%')
+
+    cursor.execute(query, params)
+    all_resources = cursor.fetchall()
+    conn.close()
+
+    return render_template('listings.html', all_resources=all_resources)
 
 
 
