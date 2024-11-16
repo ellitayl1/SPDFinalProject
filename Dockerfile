@@ -1,20 +1,20 @@
-# Set base image (host OS)
-FROM python:3.12-alpine
-
-# By default, listen on port 5000
-EXPOSE 5000/tcp
-
-# Set the working directory in the container
+# Step 1: Use an official Python runtime as a base image
+# Here we use the slim version of Python 3.9 to keep the image lightweight
+FROM python:3.9-slim
+# Step 2: Set the working directory in the container
+# This ensures that all subsequent commands are run inside the /app directory
 WORKDIR /app
-
-# Copy the dependencies file to the working directory
-COPY requirements.txt .
-
-# Install any dependencies
+# Step 3: Copy the requirements file into the container
+# This allows Docker to install dependencies before copying the rest of the application,
+# making use of Docker's layer caching to speed up builds when dependencies don't change
+COPY requirements.txt requirements.txt
+# Step 4: Install the required Python packages
+# Use pip to install the dependencies specified in requirements.txt
 RUN pip install -r requirements.txt
-
-# Copy the content of the local src directory to the working directory
-COPY app.py .
-
-# Specify the command to run on container start
-CMD [ "python", "./app.py" ]
+# Step 5: Copy the rest of the application code into the container
+# This step copies all the remaining files in the current directory to the /app directory in
+EXPOSE 5000
+COPY . .
+# Step 6: Set the command to run the application
+# The CMD instruction specifies what command to run within the container when it starts
+CMD ["python", "app.py"]
