@@ -74,7 +74,12 @@ def home():
 
 
 init_db()
-from werkzeug.security import generate_password_hash  # Import for password hashing
+from werkzeug.security import generate_password_hash
+import sqlite3
+from flask import Flask, render_template, request, redirect, url_for, flash, session
+
+app = Flask(__name__)
+app.secret_key = 'your_secret_key_here'
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -82,17 +87,17 @@ def register():
         name = request.form.get('name')
         email = request.form.get('email')
         password = request.form.get('password')
-        confirm_password = request.form.get('confirm_password')  # Get the confirm password field
+        confirm_password = request.form.get('confirm_password')
         location = request.form.get('location')
-        profile_image = 'uploads/default-profile.png'  # Default profile image
+        profile_image = 'uploads/default-profile.png'
 
         # Check if the passwords match
         if password != confirm_password:
             flash('Passwords do not match. Please try again.', 'danger')
             return redirect(url_for('register'))
 
-        # Hash the password
-        hashed_password = generate_password_hash(password, method='sha256')
+        # Hash the password securely
+        hashed_password = generate_password_hash(password, method='pbkdf2:sha256', salt_length=16)
 
         # Connect to the database
         conn = sqlite3.connect('database.db')
@@ -124,7 +129,13 @@ def register():
 
 
 
+
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from werkzeug.security import check_password_hash  # Import for password verification
+import sqlite3
+
+app = Flask(__name__)
+app.secret_key = 'your_secret_key_here'
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
